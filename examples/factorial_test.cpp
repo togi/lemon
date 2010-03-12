@@ -26,7 +26,7 @@ int factorial(int n) {
 
 int main(int argc, char* argv[]) {
   // Setup lemon for 4 tests
-  lemon::test<> lemon(4);
+  lemon::test<> lemon;
 
   // Test 1: Factorial of zero is one
   lemon.is(factorial(0), 1, "0! = 1");

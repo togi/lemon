@@ -13,8 +13,8 @@
 //
 // The lemon test suite.
 int lemon_tests() {
-	lemon::test<> lemon(16);
-	lemon::test<lemon::output::nothing> t1(8);
+	lemon::test<> lemon;
+	lemon::test<lemon::output::nothing> t1;
 
 	// Test 1: No failing tests to start off
 	lemon.is(t1.num_failed(), 0, "initially zero tests have failed.");

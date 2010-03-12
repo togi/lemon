@@ -73,21 +73,11 @@ namespace lemon {
     ///////////////////////////////////////////////////////////////////////////
     // Function: test
     //
-    // Parameters:
-    //    num_planned_tests - The total number of tests you plan to execute
-    //
-    // This simply lets lemon know how many tests you're planning to run so that
-    // it can properly output the diagnostic information and doesn't have to
-    // count by hand (which can be tricky as one test can have many assertions).
-    test (unsigned int num_planned_tests)
+    // Constructor for the test class
+    test ()
     : num_tests_(0),
       test_number_(0),
-      num_skipped_(0),
-      num_failed_(0),
-      num_planned_(num_planned_tests)
-    {
-      output_ << "1.." << num_planned_tests << "\n";
-    }
+      num_failed_(0) {}
   
     ///////////////////////////////////////////////////////////////////////////
     // Function: done
@@ -96,22 +86,11 @@ namespace lemon {
     //
     // Returns true if all unskipped tests passed, false if there were failures.
     bool done () {
-      // If any tests were skipped
-      if (num_skipped_ > 0) {
-        // Display information about the skipped tests
-        output_ << "# Looks like you planned " << num_tests_;
-        output_ << " but only ran " << (num_tests_ - num_skipped_) << "\n";
-      }
-    
       // If any tests were failed
       if (num_failed_ > 0) {
         // Display test failure statistics
         output_ << "# Looks like you failed " << num_failed_;
         output_ << " of " << num_tests_ << "\n";
-        return false;
-      } else if(num_tests_ > num_planned_) {
-        output_ << "# Looks like you ran " << num_tests_ << " tests, ";
-        output_ << "but only planned " << num_planned_ << "\n";
         return false;
       } else {
         // Otherwise display success message
@@ -258,22 +237,6 @@ namespace lemon {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Function: skip
-    //
-    // Parameters:
-    //    reason - The reason for skipping this test
-    //    num_to_skip - The number of tests to skip
-    //
-    // Skips the given number of tests adding them to the skip count.
-    void skip (const std::string& reason, unsigned int num_to_skip) {
-      num_skipped_ += num_to_skip;
-  
-      for (unsigned int i = 0; i < num_to_skip; i++) {
-        pass("# SKIP " + reason);
-      }	
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
     // Function: todo
     //
     // Parameters:
@@ -281,7 +244,6 @@ namespace lemon {
     //
     // Prints a message indicating what is left to be done
     void todo (const std::string& what) {
-      num_skipped_++;
       pass("# TODO " + what);
     }
 
@@ -292,12 +254,11 @@ namespace lemon {
     unsigned int num_failed () const {
       return num_failed_;
     }
-  private:
-    unsigned int    num_tests_; // The total number of tests to be executed
+
+private:
+    unsigned int    num_tests_; // The total number of tests that were executed
     unsigned int    test_number_; // The number of the current test
-    unsigned int    num_skipped_; // The number of tests marked as skipped
     unsigned int    num_failed_; // The number of tests marked as failing
-    unsigned int    num_planned_; // The number of tests planned to be run
     output_policy_t output_; // The place where output will be sent
   };
 }

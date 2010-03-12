@@ -25,22 +25,22 @@ int factorial(int n) {
 }
 
 void factorial_test_suite() {
-	lemon::test<> lemon(5);
+	lemon::test<> lemon;
 
 	// Test 1: The factorial function handles negative numbers as expected
-	lemon.is(factorial(-5), 1, "(-5)! = 1");
+	lemon.is(factorial(-5), 1, "(-5)! == 1");
 
 	// Test 2: Factorial of zero is one
-	lemon.is(factorial(0), 1, "0! = 1");
+	lemon.is(factorial(0), 1, "0! == 1");
 
 	// Test 3: Factorial of one is one
-	lemon.is(factorial(1), 1, "1! = 1");
+	lemon.is(factorial(1), 1, "1! == 1");
 
 	// Test 4: Factorial of 2 is 2
-	lemon.is(factorial(2), 2, "2! = 2");
+	lemon.is(factorial(2), 2, "2! == 2");
 
 	// Test 5: Factorial of 5 is 120
-	lemon.is(factorial(5), 120, "5! = 120");
+	lemon.is(factorial(5), 120, "5! == 120");
 
 	lemon.done();
 }
@@ -62,7 +62,7 @@ bool is_prime(int n) {
 }
 
 void is_prime_test_suite() {
-	lemon::test<> lemon(7);
+	lemon::test<> lemon;
 
 	// Test 1: Negative numbers are by definition non-prime
 	lemon.not_ok(is_prime(-5), "Negative numbers are not prime.");
