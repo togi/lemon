@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // lemon.h - Contains the entire lemon unit testing framework
 //
-// Time-stamp: <Last modified 2010-03-17 09:59:15 by Eric Scrivner>
+// Time-stamp: <Last modified 2010-03-18 16:55:01 by Marcus Forsell Stahre>
 //
 // Description:
 //   A lightweight, minimal unit-testing framework based on Perl Test::More
@@ -33,6 +33,8 @@
 // C++ includes
 #include <string>
 #include <iostream>
+
+#define SKIP(test, reason) for(bool __skip_enabled = (test).enable_skip(reason); __skip_enabled; __skip_enabled = (test).disable_skip())
 
 namespace lemon {
   namespace output {
@@ -102,14 +104,14 @@ namespace lemon {
     // This simply lets lemon know how many tests you're planning to run so that
     // it can properly output the diagnostic information and doesn't have to
     // count by hand (which can be tricky as one test can have many assertions).
-    test (unsigned int num_planned_tests)
+    test (unsigned int num_planned_tests = 0)
     : num_tests_(0),
       test_number_(0),
       num_skipped_(0),
       num_failed_(0),
-      num_planned_(num_planned_tests)
+      num_planned_(num_planned_tests),
+      skip_enabled_(false)
     {
-      output_ << "1.." << num_planned_tests << "\n";
     }
   
     ///////////////////////////////////////////////////////////////////////////
@@ -117,10 +119,24 @@ namespace lemon {
     //
     // Signifies the end of the testing phase and prints the results.
     //
+    // Parameters:
+    //    expected_tests_run - The total number of tests expected to have been
+    //                         run in this testing phase.
+    //
     // Returns true if all unskipped tests passed, false if there were failures.
-    bool done () {
+    bool done (unsigned int expected_tests_run = 0) {
+	    // If a number of tests was specified
+      if (expected_tests_run > 0) {
+        // If we already had a planned number of tests
+        if (num_planned_ > 0) {
+          output_ << "# Warning: explicit change of planned number of tests when \"done()\" was called.";
+          output_ << " Was: " << num_planned_ << " Became: " << expected_tests_run << "\n";
+        }
+        num_planned_ = expected_tests_run;
+      }
+	
       // If any tests were skipped
-      if (num_skipped_ > 0) {
+      if (num_planned_ > 0 && num_skipped_ > 0) {
         // Display information about the skipped tests
         output_ << "# Looks like you planned " << num_tests_;
         output_ << " but only ran " << (num_tests_ - num_skipped_) << "\n";
@@ -130,15 +146,15 @@ namespace lemon {
       if (num_failed_ > 0) {
         // Display test failure statistics
         output_ << "# Looks like you failed " << num_failed_;
-        output_ << " of " << num_tests_ << "\n";
+        output_ << " of " << (num_tests_ - num_skipped_) << "\n";
         return false;
-      } else if(num_tests_ > num_planned_) {
-        output_ << "# Looks like you ran " << num_tests_ << " tests, ";
+      } else if(num_planned_ > 0 && num_tests_ > num_planned_) {
+        output_ << "# Looks like you ran " << (num_tests_ - num_skipped_) << " tests, ";
         output_ << "but only planned " << num_planned_ << "\n";
         return false;
       } else {
         // Otherwise display success message
-        output_ << "# Looks like you passed all " << num_tests_ << " tests.\n";
+        output_ << "# Looks like you passed all " << (num_tests_ - num_skipped_) << " tests.\n";
         return true;
       }
     }
@@ -164,22 +180,33 @@ namespace lemon {
     // Marks this test as passed if pass is true.  The test is marked as
     // failing otherwise.
     bool ok (bool passed, const std::string& test_name) {
+      std::string test_name_out = test_name;
+
+      if (skip_enabled_) {
+        // Increment the number of tests skipped
+        num_skipped_++;
+      }
+
       // Increment the number of tests run
       num_tests_++;
-    
+      
       // If this is a skip or todo message
-      std::string test_name_out = test_name;
       if (test_name[0] != '#') {
         // Not the safest thing, but append a dash to the front
         test_name_out = "- " + test_name_out;
       }
     
+      if (skip_enabled_) {
+        output_ << "skipping " << num_tests_ << " " << test_name_out << "\n";
+        return false;
+      }
+  
       // If the test was passed
       if (passed) {
         // Inform you that the test passed
         output_ <<"ok " << num_tests_ << " " << test_name_out << "\n";
       } else {
-        // Otherwise increment the number of failed tests
+        // Otherwise increment the number of failed tests.
         num_failed_++;
       
         // Inform you that the test failed
@@ -315,12 +342,39 @@ namespace lemon {
     unsigned int num_failed () const {
       return num_failed_;
     }
+    
+    ///////////////////////////////////////////////////////////////////////////
+    // Function: enable_skip
+    //
+    // Parameters:
+    //    reason - The reason for skipping tests
+    //
+    // Enables skipping. While skipping is enabled, no tests are run. Always
+    // returns true.
+    bool enable_skip(const std::string& reason) {
+      output_ << "# SKIPPING ENABLED " << reason << "\n";
+      skip_enabled_ = true;
+      return true;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Function: disable_skip
+    //
+    // Disables skipping. While skipping is enabled, no tests are run. Always
+    // returns false.
+    bool disable_skip() {
+      output_ << "# SKIPPING DISABLED\n";
+      skip_enabled_ = false;
+      return false;
+    }
+    
   private:
     unsigned int    num_tests_; // The total number of tests to be executed
     unsigned int    test_number_; // The number of the current test
     unsigned int    num_skipped_; // The number of tests marked as skipped
     unsigned int    num_failed_; // The number of tests marked as failing
     unsigned int    num_planned_; // The number of tests planned to be run
+    bool            skip_enabled_; // If skip mode is enablad
     output_policy_t output_; // The place where output will be sent
   };
 }
